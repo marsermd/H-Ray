@@ -1,5 +1,5 @@
 # H-Ray
-Extensible multi-threaded raytracer in Haskell
+Extensible multi-threaded raytracer in Haskell.
 
 # Architecture overview
 The architecture is inpired by NVIDIA's [OptiX](https://developer.nvidia.com/optix) raytracer.
@@ -22,7 +22,7 @@ Examples: [AABB](https://en.wikipedia.org/wiki/AABB), [Bounding Sphere](https://
 **Closest Hit (a.k.a. Shading)**    
 Takes the first intersection along the ray and returns one of the following:    
 - Color    
-- A set of new rays to compute and a function to assemble the color once they are computed.
+- A set of new rays to compute and a function to assemble the color once they are computed
 
 **Any Hit (a.k.a. Masking)**    
 Takes the first intersection along the ray and returns one of the following:    
@@ -31,18 +31,21 @@ Takes the first intersection along the ray and returns one of the following:
 Can be used for visibility checks.
 
 ## Data
+The raytracer is executed on a scene with context.
+
+### Scene
 The scene is represented as a set of separate objects with functions assigned to them:
 - Bounding Volume
 - Intersection
 - Closest Hit
 - Any Hit (optional)
 
-## Context
-Aside from the scene objects, scene may have various parameters such as:
+### Context
+Context holds different raytracer parameters such as:
 
 - Physical lights
 - Ambient lighting
-- Setting specifying wether to use AnyHit / ClosestHit / both
+- Setting specifying whether to use AnyHit / ClosestHit / both
 - ...
 
 Each time a set of rays is created, a context is assigned to them and passed to all the consequent functions.
