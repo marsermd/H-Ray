@@ -5,7 +5,21 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 module HRayData
-    (
+    ( AABB
+    , AnyHit
+    , BoundingVolume
+    , ClosestHit
+    , Color
+    , Context
+    , D2
+    , D3
+    , Intersect
+    , Intersection
+    , Ray
+    , RayResult
+    , Scene
+    , SceneObject
+    , raycast
     ) where
 
 import Data.Map (Map, (!))
