@@ -18,7 +18,7 @@ module HRayData
     , RayResult
     , Scene
     , SceneObject
-
+    -- | Functions
     , getDouble
     , getVector2
     , getVector3
@@ -70,9 +70,9 @@ newtype AnyHit =
     AnyHit (Maybe RayResult)
 
 data Context = Context
-    { v1s     :: Map String Double
-    , v2s     :: Map String D2
-    , v3s     :: Map String D3
+    { v1s :: Map String Double
+    , v2s :: Map String D2
+    , v3s :: Map String D3
     }
 
 -- | Is used to determine if an underlying SceneObject has a chance of intersecting with the ray.
