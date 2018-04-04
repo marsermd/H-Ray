@@ -19,6 +19,10 @@ module HRayData
     , RayResult
     , Scene
     , SceneObject
+
+    , getDouble
+    , getVector2
+    , getVector3
     , raycast
     ) where
 
@@ -54,16 +58,8 @@ data RayResult
     | RayResultAssembly [Ray]
                         ([RayResult] -> Color)
 
--- | Context holds all of the variables required to trace the rays.
--- | TODO: generalize
-class Context c where
-    getVector1 :: c -> String -> Double
-    getVector2 :: c -> String -> D2
-    getVector3 :: c -> String -> D3
-
 newtype Intersect =
-    Intersect (forall c. (Context c) =>
-                             c -> Intersection)
+    Intersect (Context -> Maybe Intersection)
 
 -- | Called when the intersection point was the closest.
 newtype ClosestHit =
@@ -74,29 +70,15 @@ newtype ClosestHit =
 newtype AnyHit =
     AnyHit (Maybe RayResult)
 
--- | Is used to determine if an underlying SceneObject has a chance of intersecting with the ray.
-class BoundingVolume b where
-    intersect :: Intersect
-
--- | Scene object is fully defined by it's behaviour and context.
--- | TODO: add per-object context that looks up it's parent's values in case of a map miss.
-data SceneObject =
-    SceneObject Intersect
-                ClosestHit
-                AnyHit
-                AABB -- | TODO: parametrize with a bounding volume type.
-
-data Scene = Scene
-    { objects :: [SceneObject] -- | TODO: implement an acceleration structure for the Scene Objects instead of a plain list
-    , v1s     :: Map String Double
+data Context = Context
+    { v1s     :: Map String Double
     , v2s     :: Map String D2
     , v3s     :: Map String D3
     }
 
-instance Context Scene where
-    getVector1 Scene {..} key = v1s ! key
-    getVector2 Scene {..} key = v2s ! key
-    getVector3 Scene {..} key = v3s ! key
+-- | Is used to determine if an underlying SceneObject has a chance of intersecting with the ray.
+class BoundingVolume b where
+    intersect :: Intersect
 
 -- | Axis Alligned Bounding Box.
 data AABB = AABB
@@ -107,6 +89,43 @@ data AABB = AABB
 -- | TODO: implement intesection with the bounding box
 instance BoundingVolume AABB where
     intersect = undefined
+
+-- | Scene object is fully defined by it's behaviour and context.
+data SceneObject =
+    SceneObject Context
+                Intersect
+                ClosestHit
+                AnyHit
+                AABB -- | TODO: parametrize with a bounding volume type.
+
+data Scene = Scene
+    { objects :: [SceneObject] -- | TODO: implement an acceleration structure for the Scene Objects instead of a plain list
+    , context :: Context
+    }
+
+-- | Get Double from context hierarchy.
+getDouble :: [Context] -> String -> Maybe Double
+getDouble [] key = Nothing
+getDouble (Context {..}:contexts) key =
+    case Map.lookup key v1s of
+        Nothing -> getDouble contexts key
+        x       -> x
+
+-- | Get Vector2 from context hierarchy.
+getVector2 :: [Context] -> String -> Maybe D2
+getVector2 [] key = Nothing
+getVector2 (Context {..}:contexts) key =
+    case Map.lookup key v2s of
+        Nothing -> getVector2 contexts key
+        x       -> x
+
+-- | Get Vector3 from context hierarchy.
+getVector3 :: [Context] -> String -> Maybe D3
+getVector3 [] key = Nothing
+getVector3 (Context {..}:contexts) key =
+    case Map.lookup key v3s of
+        Nothing -> getVector3 contexts key
+        x       -> x
 
 -- | TODO: implement raycasting function.
 raycast :: Scene -> Ray -> RayResult

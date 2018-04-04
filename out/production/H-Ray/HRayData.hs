@@ -5,7 +5,21 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 module HRayData
-    (
+    ( AABB
+    , AnyHit
+    , BoundingVolume
+    , ClosestHit
+    , Color
+    , Context
+    , D2
+    , D3
+    , Intersect
+    , Intersection
+    , Ray
+    , RayResult
+    , Scene
+    , SceneObject
+    , raycast
     ) where
 
 import Data.Map (Map, (!))
@@ -40,13 +54,6 @@ data RayResult
     | RayResultAssembly [Ray]
                         ([RayResult] -> Color)
 
--- | Context holds all of the variables required to trace the rays.
--- | TODO: generalize
-class Context c where
-    getVector1 :: c -> String -> Double
-    getVector2 :: c -> String -> D2
-    getVector3 :: c -> String -> D3
-
 newtype Intersect =
     Intersect (forall c. (Context c) =>
                              c -> Intersection)
@@ -72,17 +79,33 @@ data SceneObject =
                 AnyHit
                 AABB -- | TODO: parametrize with a bounding volume type.
 
-data Scene = Scene
+data Context = Context
     { objects :: [SceneObject] -- | TODO: implement an acceleration structure for the Scene Objects instead of a plain list
     , v1s     :: Map String Double
     , v2s     :: Map String D2
     , v3s     :: Map String D3
     }
 
-instance Context Scene where
-    getVector1 Scene {..} key = v1s ! key
-    getVector2 Scene {..} key = v2s ! key
-    getVector3 Scene {..} key = v3s ! key
+getDouble :: [Context] -> String -> Maybe Double
+getDouble [] key = Nothing
+getDouble (Context {..}:scenes) key =
+    case lookup key v1s of
+        Nothing -> getDouble scenes key
+        x       -> x
+
+getVector2 :: [Context] -> String -> Maybe D2
+getVector2 [] key = Nothing
+getVector2 (Context {..}:scenes) key =
+    case lookup key v1s of
+        Nothing -> getVector2 scenes key
+        x       -> x
+
+getVector3 :: [Context] -> String -> Maybe D3
+getVector3 [] key = Nothing
+getVector3 (Context {..}:scenes) key =
+    case lookup key v1s of
+        Nothing -> getVector3 scenes key
+        x       -> x
 
 -- | Axis Alligned Bounding Box.
 data AABB = AABB

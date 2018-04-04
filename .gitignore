@@ -20,3 +20,5 @@ cabal.project.local
 .HTF/
 H-Ray.cabal
 *~
+
+.idea/workspace.xml
