@@ -85,7 +85,7 @@ data AABB = AABB
 
 -- | TODO: implement intesection with the bounding box
 instance BoundingVolume AABB where
-    intersect = undefined
+    intersect = error "Interesect is not implemented for AABB"
 
 -- | Scene object is fully defined by it's behaviour and context.
 data SceneObject =
@@ -110,4 +110,4 @@ getVar (Context context: contexts) key =
 
 -- | TODO: implement raycasting function.
 raycast :: Scene -> Ray -> RayResult
-raycast = undefined
+raycast = error "Raycast is not implemented for AABB"
