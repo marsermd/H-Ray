@@ -1,6 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes       #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RecordWildCards           #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 module HRayData
@@ -18,37 +17,33 @@ module HRayData
     , RayResult
     , Scene
     , SceneObject
+    , Var
+    , VarValue
     -- | Functions
-    , getDouble
-    , getVector2
-    , getVector3
+    , getVar
     , raycast
     ) where
 
-import Data.Map (Map, (!))
+
+import Data.Hashable (Hashable)
+import Data.HashMap.Lazy (HashMap)
 import Linear.V2 (V2)
 import Linear.V3 (V3)
 
-import qualified Data.Map as Map hiding (Map)
-import qualified Linear.V2 as V2 hiding (V2)
-import qualified Linear.V3 as V3 hiding (V3)
+import qualified Data.HashMap.Lazy as HashMap hiding (HashMap)
 
-newtype D2 =
-    D2 (V2 Double)
+newtype D2 = D2 (V2 Double)
 
-newtype D3 =
-    D3 (V3 Double)
+newtype D3 = D3 (V3 Double)
 
-newtype Color =
-    Color D3
+newtype Color = Color D3
 
 data Ray = Ray
     { origin    :: D3
     , direction :: D3
     }
 
-newtype Intersection =
-    Intersection D3
+newtype Intersection = Intersection D3
 
 -- | Ray Result is either a Color
 -- or a ray generator and a function to convert the ray results into Color
@@ -57,23 +52,26 @@ data RayResult
     | RayResultAssembly [Ray]
                         ([RayResult] -> Color)
 
-newtype Intersect =
-    Intersect (Context -> Maybe Intersection)
+newtype Intersect = Intersect (Context -> Maybe Intersection)
 
 -- | Called when the intersection point was the closest.
-newtype ClosestHit =
-    ClosestHit RayResult
+newtype ClosestHit = ClosestHit RayResult
+
+-- | Variable defined in a context
+newtype Var = Var String
+    deriving (Eq, Hashable)
+
+data VarValue =
+      Vector1 Double
+    | Vector2 D2
+    | Vector3 D3
+
 
 -- | Called when looking for any intersection point.
 -- Returns a RayResult to stop loooking for intersection points or Nothing to keep looking.
-newtype AnyHit =
-    AnyHit (Maybe RayResult)
+newtype AnyHit = AnyHit (Maybe RayResult)
 
-data Context = Context
-    { v1s :: Map String Double
-    , v2s :: Map String D2
-    , v3s :: Map String D3
-    }
+newtype Context = Context (HashMap Var VarValue)
 
 -- | Is used to determine if an underlying SceneObject has a chance of intersecting with the ray.
 class BoundingVolume b where
@@ -81,8 +79,8 @@ class BoundingVolume b where
 
 -- | Axis Alligned Bounding Box.
 data AABB = AABB
-    { min :: D3
-    , max :: D3
+    { aabbMin :: D3
+    , aabbMax :: D3
     }
 
 -- | TODO: implement intesection with the bounding box
@@ -102,28 +100,12 @@ data Scene = Scene
     , context :: Context
     }
 
--- | Get Double from context hierarchy.
-getDouble :: [Context] -> String -> Maybe Double
-getDouble [] key = Nothing
-getDouble (Context {..}:contexts) key =
-    case Map.lookup key v1s of
-        Nothing -> getDouble contexts key
-        x       -> x
-
--- | Get Vector2 from context hierarchy.
-getVector2 :: [Context] -> String -> Maybe D2
-getVector2 [] key = Nothing
-getVector2 (Context {..}:contexts) key =
-    case Map.lookup key v2s of
-        Nothing -> getVector2 contexts key
-        x       -> x
-
--- | Get Vector3 from context hierarchy.
-getVector3 :: [Context] -> String -> Maybe D3
-getVector3 [] key = Nothing
-getVector3 (Context {..}:contexts) key =
-    case Map.lookup key v3s of
-        Nothing -> getVector3 contexts key
+-- | Get Variable from context hierarchy.
+getVar :: [Context] -> Var -> Maybe VarValue
+getVar [] _ = Nothing
+getVar (Context context: contexts) key =
+    case HashMap.lookup key context of
+        Nothing -> getVar contexts key
         x       -> x
 
 -- | TODO: implement raycasting function.

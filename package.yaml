@@ -24,9 +24,17 @@ dependencies:
 - vector
 - linear
 - containers
+- unordered-containers
+- hashable
+
+default-extensions:
+- RecordWildCards
+- GeneralizedNewtypeDeriving
 
 library:
   source-dirs: src
+  ghc-options:
+  - -Wall
 
 executables:
   H-Ray-exe:
