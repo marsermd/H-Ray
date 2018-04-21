@@ -16,5 +16,11 @@ cabal.sandbox.config
 *.hp
 *.eventlog
 .stack-work/
+out/
 cabal.project.local
 .HTF/
+H-Ray.cabal
+H-Ray.iml
+*~
+
+.idea
